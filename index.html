@@ -4,39 +4,111 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BizAnalyzer Pro - AI駆動ビジネスプラン分析</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto&display=swap">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+      text-align: center;
+      color: #1e3c72;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background-color: #667eea;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #aaa;
+    }
+    #errorMessage {
+      color: red;
+      margin-bottom: 15px;
+    }
+    .result-section {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f9f9ff;
+      border-radius: 8px;
+    }
+    .result-section h3 {
+      margin-bottom: 10px;
+      color: #1e3c72;
+    }
+  </style>
 </head>
 <body>
-  <form id="analysisForm">
-    <div class="form-group">
-      <label for="appName">アプリ名</label>
-      <input type="text" id="appName" name="appName" required />
+  <div class="container">
+    <h1>BizAnalyzer Pro</h1>
+    <form id="analysisForm">
+      <div class="form-group">
+        <label for="appName">アプリ名</label>
+        <input type="text" id="appName" name="appName" required />
+      </div>
+      <div class="form-group">
+        <label for="industry">業界</label>
+        <input type="text" id="industry" name="industry" required />
+      </div>
+      <div class="form-group">
+        <label for="description">概要</label>
+        <input type="text" id="description" name="description" required />
+      </div>
+      <div class="form-group">
+        <label for="revenueModel">収益モデル</label>
+        <input type="text" id="revenueModel" name="revenueModel" />
+      </div>
+      <div class="form-group">
+        <label for="timeframe">事業期間</label>
+        <input type="text" id="timeframe" name="timeframe" />
+      </div>
+      <div class="form-group">
+        <label for="budget">予算</label>
+        <input type="number" id="budget" name="budget" />
+      </div>
+      <button type="submit" id="analyzeButton">🔍 AI分析を開始</button>
+    </form>
+    <div id="errorMessage"></div>
+    <div id="resultsSection" class="result-section" style="display:none">
+      <div id="analysisResults"></div>
     </div>
-    <div class="form-group">
-      <label for="industry">業界</label>
-      <input type="text" id="industry" name="industry" required />
-    </div>
-    <div class="form-group">
-      <label for="description">概要</label>
-      <input type="text" id="description" name="description" required />
-    </div>
-    <div class="form-group">
-      <label for="revenueModel">収益モデル</label>
-      <input type="text" id="revenueModel" name="revenueModel" />
-    </div>
-    <div class="form-group">
-      <label for="timeframe">事業期間</label>
-      <input type="text" id="timeframe" name="timeframe" />
-    </div>
-    <div class="form-group">
-      <label for="budget">予算</label>
-      <input type="number" id="budget" name="budget" />
-    </div>
-    <button type="submit" id="analyzeButton">送信</button>
-  </form>
-
-  <div id="errorMessage" style="color:red; margin-top: 10px;"></div>
-  <div id="resultsSection" style="margin-top: 20px;">
-    <div id="analysisResults"></div>
   </div>
 
   <script>
@@ -155,7 +227,7 @@
       }
 
       setLoading(isLoading) {
-        this.buttonText.innerHTML = isLoading ? 'AI分析中...' : '送信';
+        this.buttonText.innerHTML = isLoading ? 'AI分析中...' : '🔍 AI分析を開始';
         this.button.disabled = isLoading;
       }
 
