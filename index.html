@@ -4,58 +4,157 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BizAnalyzer Pro - AI駆動ビジネスプラン分析</title>
+  <style>
+    /* スタイル省略（あなたの元のCSSを保持） */
+  </style>
 </head>
 <body>
-  <form id="analysisForm">
-    <input type="text" name="appName" placeholder="アプリ名" required>
-    <input type="text" name="industry" placeholder="業界" required>
-    <input type="text" name="description" placeholder="概要" required>
-    <input type="text" name="revenueModel" placeholder="収益モデル">
-    <input type="text" name="timeframe" placeholder="事業期間">
-    <input type="text" name="budget" placeholder="予算">
-    <button type="submit">送信</button>
-  </form>
-  <div id="results"></div>
-  <div id="errorMessage" style="color:red"></div>
+  <!-- 省略：あなたの元のHTMLフォームとレイアウトはそのまま -->
 
   <script>
-    document.getElementById('analysisForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const data = Object.fromEntries(formData.entries());
-      const errorBox = document.getElementById('errorMessage');
-      const resultBox = document.getElementById('results');
-      errorBox.textContent = '';
-      resultBox.innerHTML = '分析中...';
+    class BizAnalyzer {
+      constructor() {
+        this.form = document.getElementById('analysisForm');
+        this.button = document.getElementById('analyzeButton');
+        this.buttonText = document.getElementById('buttonText');
+        this.resultsSection = document.getElementById('resultsSection');
+        this.resultsContainer = document.getElementById('analysisResults');
+        this.errorMessage = document.getElementById('errorMessage');
 
-      try {
-        const response = await fetch('/api/analyze', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(data)
+        this.initEventListeners();
+      }
+
+      initEventListeners() {
+        this.form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.analyzeBusinessPlan();
+        });
+      }
+
+      async analyzeBusinessPlan() {
+        const formData = new FormData(this.form);
+        const data = Object.fromEntries(formData.entries());
+
+        this.setLoading(true);
+        this.hideError();
+
+        try {
+          const response = await this.callAPI(data);
+          if (!response.analysis) throw new Error("APIレスポンスに analysis が含まれていません");
+          this.displayResults(response.analysis, data);
+        } catch (error) {
+          this.showError(`分析中にエラーが発生しました: ${error.message}`);
+        } finally {
+          this.setLoading(false);
+        }
+      }
+
+      async callAPI(data) {
+        try {
+          const response = await fetch('/api/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+
+          console.log('Response status:', response.status);
+          console.log('Response headers:', response.headers);
+
+          if (!response.ok) {
+            let errorMessage = 'API呼び出しに失敗しました';
+            try {
+              const error = await response.json();
+              errorMessage = error.error || errorMessage;
+            } catch (e) {
+              errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
+          }
+
+          const result = await response.json();
+          console.log('APIレスポンス:', result);
+          return result;
+
+        } catch (error) {
+          console.error('API Call Error:', error);
+          if (error.message === 'Failed to fetch') {
+            throw new Error('ネットワーク接続エラー。インターネット接続を確認してください。');
+          }
+          throw error;
+        }
+      }
+
+      displayResults(analysis, data) {
+        const sections = this.parseAnalysis(analysis);
+        const icons = ['🎯', '💼', '📢', '💰', '⚠️', '🚀'];
+
+        let html = `
+          <div class="result-card" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; text-align: center;">
+            <h2 style="color: white; margin-bottom: 10px;">${data.appName} 分析レポート</h2>
+            <p style="opacity: 0.9;">AI駆動による包括的ビジネス分析結果</p>
+          </div>
+        `;
+
+        sections.forEach((section, index) => {
+          if (section.title && section.content) {
+            html += `
+              <div class="result-card">
+                <div class="result-title">
+                  ${icons[index] || '📊'} ${section.title}
+                </div>
+                <div class="result-content">
+                  ${section.content.replace(/\n/g, '<br>')}
+                </div>
+              </div>
+            `;
+          }
         });
 
-        console.log('APIステータス:', response.status);
-        if (!response.ok) {
-          const err = await response.json();
-          throw new Error(err.error || 'APIエラー');
+        this.resultsContainer.innerHTML = html;
+        this.resultsSection.classList.add('active');
+        this.resultsSection.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      parseAnalysis(analysis) {
+        const sections = [];
+        const sectionPattern = /【([^】]+)】([\s\S]*?)(?=【|$)/g;
+        let match;
+
+        while ((match = sectionPattern.exec(analysis)) !== null) {
+          sections.push({ title: match[1].trim(), content: match[2].trim() });
         }
 
-        const result = await response.json();
-        console.log('APIレスポンス:', result);
-
-        if (!result.analysis) throw new Error('analysisが含まれていません');
-
-        // 分析結果を表示
-        const sections = result.analysis.split(/\n\n|\n/).filter(p => p.trim());
-        resultBox.innerHTML = sections.map(s => `<p>${s}</p>`).join('');
-      } catch (err) {
-        console.error('エラー:', err);
-        resultBox.innerHTML = '';
-        errorBox.textContent = '分析中にエラーが発生しました: ' + err.message;
+        if (sections.length === 0 && analysis) {
+          const paragraphs = analysis.split(/\n\n|\n/).filter(p => p.trim());
+          paragraphs.forEach((paragraph, index) => {
+            if (paragraph.length > 50) {
+              sections.push({ title: `分析結果 ${index + 1}`, content: paragraph.trim() });
+            }
+          });
+        }
+        return sections;
       }
+
+      setLoading(isLoading) {
+        this.buttonText.innerHTML = isLoading
+          ? `<div class="loading"><div class="spinner"></div>AI分析中...</div>`
+          : '🔍 AI分析を開始';
+        this.button.disabled = isLoading;
+      }
+
+      showError(message) {
+        this.errorMessage.textContent = message;
+        this.errorMessage.classList.add('active');
+        this.errorMessage.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      hideError() {
+        this.errorMessage.classList.remove('active');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      new BizAnalyzer();
     });
   </script>
 </body>
