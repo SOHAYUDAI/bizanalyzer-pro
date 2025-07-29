@@ -509,24 +509,46 @@
             }
 
             async callAPI(data) {
-                const API_BASE_URL = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:3000' 
-                    : 'https://api.bizanalyzer-pro.com'; // 本番APIのURL
+                try {
+                    // Vercelの場合、相対パスでAPIを呼び出し
+                    const response = await fetch('/api/analyze', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
 
-                const response = await fetch(`${API_BASE_URL}/api/analyze`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
+                    // レスポンスの詳細をログ出力（デバッグ用）
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
 
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'API呼び出しに失敗しました');
+                    if (!response.ok) {
+                        let errorMessage = 'API呼び出しに失敗しました';
+                        try {
+                            const error = await response.json();
+                            errorMessage = error.error || errorMessage;
+                        } catch (e) {
+                            // JSONパースに失敗した場合
+                            errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                        }
+                        throw new Error(errorMessage);
+                    }
+
+                    const result = await response.json();
+                    return result;
+
+                } catch (error) {
+                    console.error('API Call Error:', error);
+                    
+                    // ネットワークエラーの場合
+                    if (error.message === 'Failed to fetch') {
+                        throw new Error('ネットワーク接続エラー。インターネット接続を確認してください。');
+                    }
+                    
+                    // その他のエラー
+                    throw error;
                 }
-
-                return await response.json();
             }
 
             displayResults(analysis, data) {
