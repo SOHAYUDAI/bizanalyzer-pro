@@ -4,20 +4,47 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BizAnalyzer Pro - AI駆動ビジネスプラン分析</title>
-  <style>
-    /* 元のスタイルはそのままでOK */
-  </style>
 </head>
 <body>
-  <!-- 元のHTML内容（フォームやUI）はそのまま保持 -->
+  <form id="analysisForm">
+    <div class="form-group">
+      <label for="appName">アプリ名</label>
+      <input type="text" id="appName" name="appName" required />
+    </div>
+    <div class="form-group">
+      <label for="industry">業界</label>
+      <input type="text" id="industry" name="industry" required />
+    </div>
+    <div class="form-group">
+      <label for="description">概要</label>
+      <input type="text" id="description" name="description" required />
+    </div>
+    <div class="form-group">
+      <label for="revenueModel">収益モデル</label>
+      <input type="text" id="revenueModel" name="revenueModel" />
+    </div>
+    <div class="form-group">
+      <label for="timeframe">事業期間</label>
+      <input type="text" id="timeframe" name="timeframe" />
+    </div>
+    <div class="form-group">
+      <label for="budget">予算</label>
+      <input type="number" id="budget" name="budget" />
+    </div>
+    <button type="submit" id="analyzeButton">送信</button>
+  </form>
 
-  <!-- JavaScriptを最後に移動し、DOMContentLoadedでラップ -->
+  <div id="errorMessage" style="color:red; margin-top: 10px;"></div>
+  <div id="resultsSection" style="margin-top: 20px;">
+    <div id="analysisResults"></div>
+  </div>
+
   <script>
     class BizAnalyzer {
       constructor() {
         this.form = document.getElementById('analysisForm');
         this.button = document.getElementById('analyzeButton');
-        this.buttonText = document.getElementById('buttonText');
+        this.buttonText = this.button;
         this.resultsSection = document.getElementById('resultsSection');
         this.resultsContainer = document.getElementById('analysisResults');
         this.errorMessage = document.getElementById('errorMessage');
@@ -63,8 +90,6 @@
           });
 
           console.log('Response status:', response.status);
-          console.log('Response headers:', response.headers);
-
           if (!response.ok) {
             let errorMessage = 'API呼び出しに失敗しました';
             try {
@@ -93,31 +118,20 @@
         const sections = this.parseAnalysis(analysis);
         const icons = ['🎯', '💼', '📢', '💰', '⚠️', '🚀'];
 
-        let html = `
-          <div class="result-card" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; text-align: center;">
-            <h2 style="color: white; margin-bottom: 10px;">${data.appName} 分析レポート</h2>
-            <p style="opacity: 0.9;">AI駆動による包括的ビジネス分析結果</p>
-          </div>
-        `;
-
+        let html = `<h2>${data.appName} の分析レポート</h2>`;
         sections.forEach((section, index) => {
           if (section.title && section.content) {
             html += `
-              <div class="result-card">
-                <div class="result-title">
-                  ${icons[index] || '📊'} ${section.title}
-                </div>
-                <div class="result-content">
-                  ${section.content.replace(/\n/g, '<br>')}
-                </div>
+              <div>
+                <h3>${icons[index] || '📊'} ${section.title}</h3>
+                <p>${section.content.replace(/\n/g, '<br>')}</p>
               </div>
             `;
           }
         });
 
         this.resultsContainer.innerHTML = html;
-        this.resultsSection.classList.add('active');
-        this.resultsSection.scrollIntoView({ behavior: 'smooth' });
+        this.resultsSection.style.display = 'block';
       }
 
       parseAnalysis(analysis) {
@@ -141,24 +155,21 @@
       }
 
       setLoading(isLoading) {
-        this.buttonText.innerHTML = isLoading
-          ? `<div class="loading"><div class="spinner"></div>AI分析中...</div>`
-          : '🔍 AI分析を開始';
+        this.buttonText.innerHTML = isLoading ? 'AI分析中...' : '送信';
         this.button.disabled = isLoading;
       }
 
       showError(message) {
         this.errorMessage.textContent = message;
-        this.errorMessage.classList.add('active');
-        this.errorMessage.scrollIntoView({ behavior: 'smooth' });
+        this.errorMessage.style.display = 'block';
       }
 
       hideError() {
-        this.errorMessage.classList.remove('active');
+        this.errorMessage.textContent = '';
+        this.errorMessage.style.display = 'none';
       }
     }
 
-    // HTMLの読み込み完了後に実行する
     document.addEventListener('DOMContentLoaded', () => {
       new BizAnalyzer();
     });
