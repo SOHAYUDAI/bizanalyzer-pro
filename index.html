@@ -5,12 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BizAnalyzer Pro - AI駆動ビジネスプラン分析</title>
   <style>
-    /* スタイル省略（あなたの元のCSSを保持） */
+    /* 元のスタイルはそのままでOK */
   </style>
 </head>
 <body>
-  <!-- 省略：あなたの元のHTMLフォームとレイアウトはそのまま -->
+  <!-- 元のHTML内容（フォームやUI）はそのまま保持 -->
 
+  <!-- JavaScriptを最後に移動し、DOMContentLoadedでラップ -->
   <script>
     class BizAnalyzer {
       constructor() {
@@ -25,6 +26,10 @@
       }
 
       initEventListeners() {
+        if (!this.form) {
+          console.error('フォームが見つかりません');
+          return;
+        }
         this.form.addEventListener('submit', (e) => {
           e.preventDefault();
           this.analyzeBusinessPlan();
@@ -153,6 +158,7 @@
       }
     }
 
+    // HTMLの読み込み完了後に実行する
     document.addEventListener('DOMContentLoaded', () => {
       new BizAnalyzer();
     });
