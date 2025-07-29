@@ -16,34 +16,25 @@ export default async function handler(req, res) {
     return;
   }
 
-  // リクエストボディ読み取り（重要！）
-  const buffers = [];
-  for await (const chunk of req) {
-    buffers.push(chunk);
-  }
-  const bodyText = Buffer.concat(buffers).toString();
-
-  let body;
   try {
-    body = JSON.parse(bodyText);
-  } catch (e) {
-    res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'リクエストボディが不正です' }));
-    return;
-  }
+    // Node.js形式でボディを読む（← request.json() は使わない！）
+    const buffers = [];
+    for await (const chunk of req) {
+      buffers.push(chunk);
+    }
+    const bodyText = Buffer.concat(buffers).toString();
+    const body = JSON.parse(bodyText);
 
-  // 必須項目チェック
-  const { appName, industry, description } = body;
-  if (!appName || !industry || !description) {
-    res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: '必須項目が入力されていません' }));
-    return;
-  }
+    // ダミー応答（まず動作確認）
+    res.writeHead(200, {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*'
+    });
+    res.end(JSON.stringify({ message: '正常に動作しています', received: body }));
 
-  // 仮レスポンス（OpenAI API未接続でも動作確認可）
-  res.writeHead(200, {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*'
-  });
-  res.end(JSON.stringify({ message: '受信完了', data: body }));
+  } catch (err) {
+    console.error('エラー:', err);
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'サーバーエラーが発生しました' }));
+  }
 }
