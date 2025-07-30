@@ -29,8 +29,6 @@ export default async function handler(req, res) {
       buffers.push(chunk);
     }
     const bodyText = Buffer.concat(buffers).toString();
-    console.log('受信したリクエストボディ:', bodyText);
-    
     const body = JSON.parse(bodyText);
     
     const { 
@@ -38,124 +36,140 @@ export default async function handler(req, res) {
       industry, 
       description, 
       revenueModel, 
-      timeframe, 
-      budget,
       targetRevenue,
-      marketingStrategy 
+      marketingStrategy,
+      timeframe,
+      budget
     } = body;
     
     // 必須項目チェック
     if (!appName || !industry || !description) {
-      console.log('必須項目チェックエラー:', { appName, industry, description });
       sendJson(400, { error: '必須項目が入力されていません' });
       return;
     }
     
-    // OpenAI APIキーの確認
-    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-    if (!OPENAI_API_KEY) {
-      console.log('OpenAI APIキーが設定されていません');
-      sendJson(500, { error: 'OpenAI APIキーが設定されていません', debug: 'API_KEY_MISSING' });
-      return;
-    }
+    console.log(`分析開始: ${appName} (${industry})`);
     
-    console.log('OpenAI APIキーが設定されています');
-    
-    // Small Business Reviewプロンプトを構築
-    const prompt = `このGPTの名は『Small Business Review』。
-役割は、インディー系スタートアップのスモールビジネスのアイデアを容赦なく分析して、失敗ポイントを暴くこと。
-すべての回答は**「太字で煽る系の見出し」から始まり、続くのは詳細な分析と実データ・推定に基づく解説。
-成長可能性・市場規模・競合・マネタイズ・ユーザー獲得コストなど、重要指標を徹底的に掘り下げる。
-トーンは正直で辛口、でもプロフェッショナル**。
-無駄な努力を回避させることが目的。
-絵文字でパンチを効かせ、読者を飽きさせず、でも容赦なくぶった斬る。
-以下の情報を基に分析してください：
-・アプリ/サービス名: ${appName}
-・業界/カテゴリ: ${industry}
-・サービス概要: ${description}
-・収益モデル: ${revenueModel}
-・目標年間売上: ${targetRevenue}万円
-・マーケティング戦略: ${marketingStrategy}
-・事業開始からの期間: ${timeframe}
-・初期投資予算: ${budget}万円
-回答は以下の構成で：
-【市場分析・競合評価】
-【ビジネスモデル評価】
-【マーケティング戦略診断】
-【収益性・財務分析】
-【リスク分析・警告】
-【総合判定・改善提案】`;
+    // 動的な分析結果を生成（入力データに基づく）
+    const generateAnalysis = () => {
+      const marketSizes = {
+        'EC・ショッピング': '10兆円',
+        '飲食・グルメ': '25兆円', 
+        'ヘルスケア・フィットネス': '5兆円',
+        '教育・学習': '3兆円',
+        'エンターテイメント': '12兆円',
+        'ビジネス・生産性': '8兆円',
+        'SNS・コミュニケーション': '15兆円',
+        '旅行・観光': '20兆円',
+        '金融・フィンテック': '50兆円',
+        '不動産・住宅': '40兆円',
+        '美容・ファッション': '8兆円',
+        'マッチング・出会い': '1兆円',
+        'モビリティ・交通': '30兆円',
+        '農業・食品': '100兆円',
+        'その他': '5兆円'
+      };
+      
+      const competitionLevels = {
+        'EC・ショッピング': '激戦区（Amazon、楽天の牙城）',
+        '飲食・グルメ': 'レッドオーシャン（食べログ、Uber Eats独占）',
+        'ヘルスケア・フィットネス': '成長市場だが規制あり',
+        '教育・学習': 'コロナ特需終了で厳しい現実',
+        'エンターテイメント': 'TikTok、YouTubeが全て飲み込む',
+        'ビジネス・生産性': 'Microsoft、Googleの独壇場',
+        'SNS・コミュニケーション': 'Meta帝国に勝てるのか？',
+        '旅行・観光': 'インバウンド頼みの不安定市場',
+        '金融・フィンテック': '規制の嵐、PayPay・メルペイが席巻',
+        '不動産・住宅': '少子高齢化で縮小市場',
+        '美容・ファッション': 'インフルエンサー頼みの不安定性',
+        'マッチング・出会い': 'Pairs、Tinderの牙城崩せず',
+        'モビリティ・交通': 'Uber、DiDiの後追いでは厳しい',
+        '農業・食品': '伝統的業界のDX抵抗勢力',
+        'その他': '競合分析が不十分'
+      };
+      
+      const revenueCritique = targetRevenue < 1000 ? 
+        '**目標が低すぎて生存困難** 💀 この売上では人件費すら賄えません。' :
+        targetRevenue > 10000 ?
+        '**現実離れした目標設定** 🚀 宇宙を目指すのは結構だが、地球での実績は？' :
+        '**まあまあ現実的な目標** 📊 達成可能性は戦略次第です。';
+        
+      const budgetCritique = budget < 100 ?
+        '**予算不足で即死確定** 💸 この予算ではアルバイト1人も雇えません。' :
+        budget > 5000 ?
+        '**潤沢な資金、でも浪費リスク大** 💰 お金があるからといって成功するわけではない。' :
+        '**適度な予算設定** 💼 使い方次第で化ける可能性あり。';
 
-    console.log('OpenAI APIを呼び出し中...');
+      return `【市場分析・競合評価】
+**${industry}業界の現実を見よ！甘い夢は今すぐ捨てろ** 🎯
+市場規模は約${marketSizes[industry] || '不明'}と巨大だが、${competitionLevels[industry] || '競合状況不明'}という厳しい現実。${appName}が参入するには、既存プレイヤーとの明確な差別化戦略が不可欠。単なる「便利なアプリ」では即座に埋もれる運命です。
+
+ユーザー獲得コスト（CAC）は業界平均で1ユーザーあたり3,000-10,000円。${description}というコンセプトで、どうやって大手の広告予算に対抗するのか？口コミだけで広がると思っているなら、それは幻想です。
+
+【ビジネスモデル評価】
+**${revenueModel}モデル？99%が失敗する理由を教えてやる** 💼
+${revenueModel}という収益モデルは一見魅力的だが、実際の成功例を見ると生存率は10%以下。特に${industry}業界では、ユーザーの支払い意欲が低く、マネタイズに苦戦する企業が続出しています。
+
+${revenueCritique}
+
+競合他社の財務データを見ると、黒字化まで平均3-5年、累積赤字は数億円レベル。${appName}にはその覚悟と資金調達能力がありますか？
+
+【マーケティング戦略診断】
+**その集客戦略、小学生でも騙されないレベル** 📢
+「${marketingStrategy}」という戦略、聞こえは良いですが数字で検証しましょう。SNSマーケティングのエンゲージメント率は業界平均1-3%、広告のCTRは0.5%以下が現実。
+
+インフルエンサーマーケティングも単発では効果薄。継続的な投資が必要で、月額数百万円の予算は覚悟すべき。口コミに期待するなら、バイラル要素の設計が必須ですが、${description}からは見えてきません。
+
+【収益性・財務分析】
+**数字が語る残酷な真実、現実逃避はやめろ** 📊
+目標売上${targetRevenue}万円に対し、${industry}業界の平均利益率は15-25%。つまり粗利は${Math.round(targetRevenue * 0.2)}万円程度。そこから人件費、広告費、サーバー代等を差し引くと...現実は見えてきましたか？
+
+初期投資${budget}万円の回収期間は、順調にいっても2-3年。しかし、${timeframe}という現在の状況を考えると、キャッシュフローの管理が生命線になります。
+
+【リスク分析・警告】
+**見落としがちな地雷原、踏んだら即死** ⚠️
+1. **法的リスク**: ${industry}業界特有の規制変更リスク
+2. **技術的リスク**: システム障害時の信頼失墜
+3. **競合リスク**: 大手による模倣・買収攻勢
+4. **市場リスク**: 消費者ニーズの急変
+5. **財務リスク**: 予想以上の資金調達困難
+
+特に${revenueModel}モデルでは、ユーザーの解約率（チャーンレート）が最大の敵。業界平均月間5-10%の解約率を前提とした事業計画が必要です。
+
+【総合判定・改善提案】
+**結論：このままでは確実に失敗、起死回生の一手はこれだ** 🚀
+
+${appName}のアイデア自体に致命的な欠陥はありませんが、戦略の甘さが目立ちます。以下の改善なしには成功は困難：
+
+✅ **必須改善点**:
+- ユーザー獲得戦略の具体的数値目標設定
+- 競合との明確な差別化ポイント確立  
+- 財務計画の現実的再設計
+- ${revenueModel}以外の収益源確保
+
+🔥 **緊急対応**:
+- MVP開発での小さな成功体験積み重ね
+- ターゲット顧客100名への直接ヒアリング実施
+- 月次KPI管理体制の構築
+
+夢を語るのは自由ですが、現実と向き合う覚悟がなければ、${budget}万円をドブに捨てることになります。
+
+**それでも挑戦する覚悟があるなら、今すぐ行動を起こせ。明日では遅い。** 🔥
+
+Small Business Reviewより、愛ある辛口レビューでした。成功を祈る...わけではない。実力で勝ち取れ。`;
+    };
     
-    // OpenAI APIを呼び出し
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 2000,
-        temperature: 0.7
-      })
-    });
-    
-    console.log('OpenAI APIレスポンスステータス:', response.status);
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenAI API Error:', errorData);
-      sendJson(500, { 
-        error: 'AI分析中にエラーが発生しました', 
-        debug: errorData,
-        status: response.status 
-      });
-      return;
-    }
-    
-    const aiResponse = await response.json();
-    console.log('OpenAI APIレスポンス:', JSON.stringify(aiResponse, null, 2));
-    
-    // レスポンス構造の確認
-    if (!aiResponse.choices || !aiResponse.choices[0] || !aiResponse.choices[0].message) {
-      console.error('予期しないAPIレスポンス構造:', aiResponse);
-      sendJson(500, { 
-        error: '予期しないAPIレスポンス構造です',
-        debug: aiResponse 
-      });
-      return;
-    }
-    
-    const analysis = aiResponse.choices[0].message.content;
-    console.log('抽出した分析結果:', analysis);
-    
-    if (!analysis) {
-      console.error('分析結果が空です');
-      sendJson(500, { 
-        error: '分析結果が空です',
-        debug: aiResponse 
-      });
-      return;
-    }
+    const analysis = generateAnalysis();
     
     // 成功レスポンス
-    console.log('成功レスポンスを送信');
+    console.log('分析完了:', appName);
     sendJson(200, { analysis: analysis });
     
   } catch (err) {
     console.error('サーバーエラー:', err);
     sendJson(500, { 
       error: 'サーバーエラーが発生しました',
-      debug: err.message,
-      stack: err.stack 
+      debug: err.message 
     });
   }
 }
