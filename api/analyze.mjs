@@ -29,6 +29,8 @@ export default async function handler(req, res) {
       buffers.push(chunk);
     }
     const bodyText = Buffer.concat(buffers).toString();
+    console.log('受信したリクエストボディ:', bodyText);
+    
     const body = JSON.parse(bodyText);
     
     const { 
@@ -44,6 +46,7 @@ export default async function handler(req, res) {
     
     // 必須項目チェック
     if (!appName || !industry || !description) {
+      console.log('必須項目チェックエラー:', { appName, industry, description });
       sendJson(400, { error: '必須項目が入力されていません' });
       return;
     }
@@ -51,9 +54,12 @@ export default async function handler(req, res) {
     // OpenAI APIキーの確認
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
     if (!OPENAI_API_KEY) {
-      sendJson(500, { error: 'OpenAI APIキーが設定されていません' });
+      console.log('OpenAI APIキーが設定されていません');
+      sendJson(500, { error: 'OpenAI APIキーが設定されていません', debug: 'API_KEY_MISSING' });
       return;
     }
+    
+    console.log('OpenAI APIキーが設定されています');
     
     // Small Business Reviewプロンプトを構築
     const prompt = `このGPTの名は『Small Business Review』。
@@ -63,9 +69,7 @@ export default async function handler(req, res) {
 トーンは正直で辛口、でもプロフェッショナル**。
 無駄な努力を回避させることが目的。
 絵文字でパンチを効かせ、読者を飽きさせず、でも容赦なくぶった斬る。
-
 以下の情報を基に分析してください：
-
 ・アプリ/サービス名: ${appName}
 ・業界/カテゴリ: ${industry}
 ・サービス概要: ${description}
@@ -74,7 +78,6 @@ export default async function handler(req, res) {
 ・マーケティング戦略: ${marketingStrategy}
 ・事業開始からの期間: ${timeframe}
 ・初期投資予算: ${budget}万円
-
 回答は以下の構成で：
 【市場分析・競合評価】
 【ビジネスモデル評価】
@@ -83,6 +86,8 @@ export default async function handler(req, res) {
 【リスク分析・警告】
 【総合判定・改善提案】`;
 
+    console.log('OpenAI APIを呼び出し中...');
+    
     // OpenAI APIを呼び出し
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -102,22 +107,55 @@ export default async function handler(req, res) {
         temperature: 0.7
       })
     });
-
+    
+    console.log('OpenAI APIレスポンスステータス:', response.status);
+    
     if (!response.ok) {
       const errorData = await response.json();
       console.error('OpenAI API Error:', errorData);
-      sendJson(500, { error: 'AI分析中にエラーが発生しました' });
+      sendJson(500, { 
+        error: 'AI分析中にエラーが発生しました', 
+        debug: errorData,
+        status: response.status 
+      });
       return;
     }
-
+    
     const aiResponse = await response.json();
+    console.log('OpenAI APIレスポンス:', JSON.stringify(aiResponse, null, 2));
+    
+    // レスポンス構造の確認
+    if (!aiResponse.choices || !aiResponse.choices[0] || !aiResponse.choices[0].message) {
+      console.error('予期しないAPIレスポンス構造:', aiResponse);
+      sendJson(500, { 
+        error: '予期しないAPIレスポンス構造です',
+        debug: aiResponse 
+      });
+      return;
+    }
+    
     const analysis = aiResponse.choices[0].message.content;
+    console.log('抽出した分析結果:', analysis);
+    
+    if (!analysis) {
+      console.error('分析結果が空です');
+      sendJson(500, { 
+        error: '分析結果が空です',
+        debug: aiResponse 
+      });
+      return;
+    }
     
     // 成功レスポンス
+    console.log('成功レスポンスを送信');
     sendJson(200, { analysis: analysis });
     
   } catch (err) {
     console.error('サーバーエラー:', err);
-    sendJson(500, { error: 'サーバーエラーが発生しました' });
+    sendJson(500, { 
+      error: 'サーバーエラーが発生しました',
+      debug: err.message,
+      stack: err.stack 
+    });
   }
 }
