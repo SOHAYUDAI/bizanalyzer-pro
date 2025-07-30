@@ -544,23 +544,16 @@
         }
 
         displayResults(analysis, data) {
-            const sections = analysis.split(/(?=【[^】]+】)/).map(block => {
-                const match = block.match(/【([^】]+)】([\s\S]*)/);
-                return match ? { title: match[1], content: match[2].trim() } : null;
-            }).filter(Boolean);
-
+            // GPTの自然な回答をそのまま表示（項目分けしない）
             let html = `
                 <div class="result-card" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; text-align: center;">
                     <h2 style="color: white; margin-bottom: 10px;">${data.appName} 分析レポート</h2>
-                    <p style="opacity: 0.9;">AI駆動による包括的ビジネス分析結果</p>
+                    <p style="opacity: 0.9;">Small Business Review による辛口分析</p>
+                </div>
+                <div class="result-card">
+                    <div class="result-content" style="white-space: pre-wrap; line-height: 1.8;">${analysis}</div>
                 </div>
             `;
-
-            html += sections.map((s, i) => `
-                <div class="result-card">
-                    <div class="result-title">${['🎯','💼','📢','💰','⚠️','🚀'][i] || '📊'} ${s.title}</div>
-                    <div class="result-content">${s.content.replace(/\n/g, '<br>')}</div>
-                </div>`).join('');
 
             this.resultsContainer.innerHTML = html;
             this.resultsSection.classList.add('active');
