@@ -368,32 +368,79 @@
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="appName">アプリ・サービス名</label>
-                            <input type="text" id="appName" name="appName" placeholder="例: FoodieConnect" required>
+                            <input type="text" id="appName" name="appName" placeholder="例: FoodieConnect" required maxlength="100">
                         </div>
 
                         <div class="form-group">
                             <label for="industry">業界・カテゴリ</label>
-                            <input type="text" id="industry" name="industry" placeholder="例: 飲食・グルメ" required>
+                            <select id="industry" name="industry" required>
+                                <option value="">選択してください</option>
+                                <option value="EC・ショッピング">EC・ショッピング</option>
+                                <option value="飲食・グルメ">飲食・グルメ</option>
+                                <option value="ヘルスケア・フィットネス">ヘルスケア・フィットネス</option>
+                                <option value="教育・学習">教育・学習</option>
+                                <option value="エンターテイメント">エンターテイメント</option>
+                                <option value="ビジネス・生産性">ビジネス・生産性</option>
+                                <option value="SNS・コミュニケーション">SNS・コミュニケーション</option>
+                                <option value="旅行・観光">旅行・観光</option>
+                                <option value="金融・フィンテック">金融・フィンテック</option>
+                                <option value="不動産・住宅">不動産・住宅</option>
+                                <option value="美容・ファッション">美容・ファッション</option>
+                                <option value="マッチング・出会い">マッチング・出会い</option>
+                                <option value="モビリティ・交通">モビリティ・交通</option>
+                                <option value="農業・食品">農業・食品</option>
+                                <option value="その他">その他</option>
+                            </select>
                         </div>
 
                         <div class="form-group wide">
                             <label for="description">サービス概要</label>
-                            <textarea id="description" name="description" placeholder="どのようなサービスですか？ターゲットユーザーや解決する課題について詳しく教えてください..." required></textarea>
+                            <textarea id="description" name="description" placeholder="どのようなサービスですか？ターゲットユーザーや解決する課題について詳しく教えてください..." required maxlength="1000"></textarea>
                         </div>
 
                         <div class="form-group">
                             <label for="revenueModel">収益モデル</label>
-                            <input type="text" id="revenueModel" name="revenueModel" placeholder="例: サブスクリプション" required>
+                            <select id="revenueModel" name="revenueModel" required>
+                                <option value="">選択してください</option>
+                                <option value="サブスクリプション">サブスクリプション</option>
+                                <option value="広告収入">広告収入</option>
+                                <option value="手数料・コミッション">手数料・コミッション</option>
+                                <option value="アプリ内課金">アプリ内課金・アイテム販売</option>
+                                <option value="フリーミアム">フリーミアム</option>
+                                <option value="一括購入">一括購入・買い切り</option>
+                                <option value="従量課金">従量課金</option>
+                                <option value="マーケットプレイス">マーケットプレイス</option>
+                                <option value="SaaS">SaaS（Software as a Service）</option>
+                                <option value="その他">その他</option>
+                            </select>
                         </div>
 
                         <div class="form-group">
-                            <label for="timeframe">事業期間</label>
-                            <input type="text" id="timeframe" name="timeframe" placeholder="例: 3年間" required>
+                            <label for="targetRevenue">目標年間売上（万円）</label>
+                            <input type="number" id="targetRevenue" name="targetRevenue" placeholder="1000" min="1" max="100000" required>
+                        </div>
+
+                        <div class="form-group wide">
+                            <label for="marketingStrategy">マーケティング戦略</label>
+                            <textarea id="marketingStrategy" name="marketingStrategy" placeholder="どのようにユーザーを獲得する予定ですか？SNS、広告、口コミなど具体的な戦略を教えてください..." required maxlength="800"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="timeframe">事業開始からの期間</label>
+                            <select id="timeframe" name="timeframe" required>
+                                <option value="">選択してください</option>
+                                <option value="企画段階">企画段階</option>
+                                <option value="開発中">開発中</option>
+                                <option value="ローンチ予定">ローンチ予定</option>
+                                <option value="運営開始済み（6ヶ月未満）">運営開始済み（6ヶ月未満）</option>
+                                <option value="運営開始済み（6ヶ月〜1年）">運営開始済み（6ヶ月〜1年）</option>
+                                <option value="運営開始済み（1年以上）">運営開始済み（1年以上）</option>
+                            </select>
                         </div>
 
                         <div class="form-group">
                             <label for="budget">初期投資予算（万円）</label>
-                            <input type="number" id="budget" name="budget" placeholder="500" min="0" required>
+                            <input type="number" id="budget" name="budget" placeholder="500" min="0" max="10000" required>
                         </div>
                     </div>
 
