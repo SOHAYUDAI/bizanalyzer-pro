@@ -4,24 +4,436 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BizAnalyzer Pro - AI駆動ビジネスプラン分析</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
-    /* CSSは省略：すでにデザインOKな状態として維持 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #2d3748;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><radialGradient id="a"><stop offset="0" stop-color="%23ffffff" stop-opacity="0.1"/><stop offset="1" stop-color="%23ffffff" stop-opacity="0"/></radialGradient></defs><g opacity="0.8"><circle cx="200" cy="200" r="180" fill="url(%23a)"/><circle cx="800" cy="300" r="120" fill="url(%23a)"/><circle cx="300" cy="700" r="150" fill="url(%23a)"/><circle cx="700" cy="800" r="100" fill="url(%23a)"/></g></svg>') no-repeat;
+      background-size: cover;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      color: white;
+    }
+
+    .header h1 {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin-bottom: 15px;
+      background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      letter-spacing: -0.02em;
+    }
+
+    .header .subtitle {
+      font-size: 1.3rem;
+      opacity: 0.95;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+
+    .main-card {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 50px;
+      box-shadow: 0 32px 64px rgba(0, 0, 0, 0.12), 
+                  0 0 0 1px rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .main-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.4), transparent);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+
+    .form-group {
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 12px;
+      font-weight: 600;
+      color: #4a5568;
+      font-size: 0.95rem;
+      letter-spacing: 0.01em;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 18px 20px;
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      font-size: 1rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: #fafbfc;
+      font-family: inherit;
+      line-height: 1.5;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1),
+                  0 8px 25px rgba(102, 126, 234, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .form-group textarea {
+      min-height: 140px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: #a0aec0;
+      font-weight: 400;
+    }
+
+    .submit-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 45px;
+      border: none;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 100%;
+      margin-top: 25px;
+      position: relative;
+      overflow: hidden;
+      text-transform: none;
+      letter-spacing: 0.02em;
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.6s ease;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+    }
+
+    .submit-btn:hover::before {
+      left: 100%;
+    }
+
+    .submit-btn:active {
+      transform: translateY(-1px);
+    }
+
+    .submit-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.8;
+      transform: none;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-message {
+      background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+      color: #c53030;
+      padding: 20px;
+      border-radius: 16px;
+      margin-top: 25px;
+      border: 1px solid #fca5a5;
+      display: none;
+      font-weight: 500;
+      box-shadow: 0 8px 25px rgba(197, 48, 48, 0.15);
+    }
+
+    .error-message.active {
+      display: block;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .results-section {
+      margin-top: 40px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.5s ease-out;
+      pointer-events: none;
+    }
+
+    .results-section.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .result-card {
+      background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 25px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+      position: relative;
+      overflow: hidden;
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    .result-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .result-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      letter-spacing: -0.01em;
+    }
+
+    .result-content {
+      line-height: 1.8;
+      color: #4a5568;
+      font-size: 1rem;
+      font-weight: 400;
+    }
+
+    .result-content br + br {
+      content: "";
+      margin-bottom: 15px;
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+      }
+
+      .header .subtitle {
+        font-size: 1.1rem;
+      }
+
+      .main-card {
+        padding: 30px 25px;
+        border-radius: 20px;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .submit-btn {
+        padding: 18px 35px;
+        font-size: 1rem;
+      }
+
+      .result-card {
+        padding: 25px 20px;
+        border-radius: 16px;
+      }
+
+      .result-title {
+        font-size: 1.2rem;
+      }
+    }
+
+    /* デバイスダークモード対応 */
+    @media (prefers-color-scheme: dark) {
+      .main-card {
+        background: rgba(45, 55, 72, 0.95);
+        color: #e2e8f0;
+      }
+
+      .form-group label {
+        color: #cbd5e0;
+      }
+
+      .form-group input,
+      .form-group textarea {
+        background: rgba(74, 85, 104, 0.6);
+        border-color: #4a5568;
+        color: #e2e8f0;
+      }
+
+      .form-group input::placeholder,
+      .form-group textarea::placeholder {
+        color: #718096;
+      }
+
+      .result-card {
+        background: rgba(45, 55, 72, 0.9);
+        color: #e2e8f0;
+      }
+
+      .result-title {
+        color: #e2e8f0;
+      }
+
+      .result-content {
+        color: #cbd5e0;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <form id="analysisForm">
-      <input type="text" id="appName" name="appName" placeholder="アプリ名" required>
-      <input type="text" id="industry" name="industry" placeholder="業界" required>
-      <textarea id="description" name="description" placeholder="概要" required></textarea>
-      <input type="text" id="revenueModel" name="revenueModel" placeholder="収益モデル" required>
-      <input type="text" id="timeframe" name="timeframe" placeholder="事業期間" required>
-      <input type="number" id="budget" name="budget" placeholder="予算" required>
-      <button type="submit" id="analyzeButton"><span id="buttonText">送信</span></button>
-    </form>
-    <div id="errorMessage" class="error-message"></div>
-    <div id="resultsSection" class="results-section">
-      <div id="analysisResults"></div>
+    <div class="header">
+      <h1><i class="fas fa-chart-line"></i> BizAnalyzer Pro</h1>
+      <p class="subtitle">AI駆動でビジネスプランを詳細分析</p>
+    </div>
+
+    <div class="main-card">
+      <form id="analysisForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="appName"><i class="fas fa-rocket"></i> プロジェクト名</label>
+            <input type="text" id="appName" name="appName" placeholder="例: 地域密着型デリバリーアプリ" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="industry"><i class="fas fa-industry"></i> 業界・分野</label>
+            <input type="text" id="industry" name="industry" placeholder="例: フードテック・配送業" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="revenueModel"><i class="fas fa-coins"></i> 収益モデル</label>
+            <input type="text" id="revenueModel" name="revenueModel" placeholder="例: 手数料10% + 配送料" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="timeframe"><i class="fas fa-calendar-alt"></i> 事業期間</label>
+            <input type="text" id="timeframe" name="timeframe" placeholder="例: 3年間" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="budget"><i class="fas fa-yen-sign"></i> 初期予算（万円）</label>
+            <input type="number" id="budget" name="budget" placeholder="例: 500" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description"><i class="fas fa-file-alt"></i> ビジネス概要・詳細</label>
+          <textarea id="description" name="description" placeholder="ビジネスの詳細、ターゲット層、特徴、差別化ポイントなどを具体的に記述してください..." required></textarea>
+        </div>
+
+        <button type="submit" id="analyzeButton">
+          <span id="buttonText"><i class="fas fa-search"></i> AI分析を開始</span>
+        </button>
+      </form>
+
+      <div id="errorMessage" class="error-message"></div>
+
+      <div id="resultsSection" class="results-section">
+        <div id="analysisResults"></div>
+      </div>
     </div>
   </div>
   
@@ -71,18 +483,37 @@
             const match = block.match(/【([^】]+)】([\s\S]*)/);
             return match ? { title: match[1], content: match[2].trim() } : null;
           }).filter(Boolean);
+          
+          const icons = ['🎯','💼','📢','💰','⚠️','🚀'];
+          
           this.resultsContainer.innerHTML = sections.map((s, i) => `
-            <div class="result-card">
-              <div class="result-title">${['🎯','💼','📢','💰','⚠️','🚀'][i] || '📊'} ${s.title}</div>
+            <div class="result-card" style="animation-delay: ${i * 0.1}s">
+              <div class="result-title">${icons[i] || '📊'} ${s.title}</div>
               <div class="result-content">${s.content.replace(/\n/g, '<br>')}</div>
             </div>`).join('');
+            
           this.resultsSection.classList.add('active');
-          this.resultsSection.scrollIntoView({ behavior: 'smooth' });
+          
+          // スムーズスクロール
+          setTimeout(() => {
+            this.resultsSection.scrollIntoView({ 
+              behavior: 'smooth',
+              block: 'start'
+            });
+          }, 300);
         }
 
         setLoading(loading) {
           this.button.disabled = loading;
-          this.buttonText.innerHTML = loading ? '<div class="loading"><div class="spinner"></div>AI分析中...</div>' : '🔍 AI分析を開始';
+          if (loading) {
+            this.buttonText.innerHTML = `
+              <div class="loading">
+                <div class="spinner"></div>
+                AI分析中...
+              </div>`;
+          } else {
+            this.buttonText.innerHTML = '<i class="fas fa-search"></i> AI分析を開始';
+          }
         }
 
         showError(msg) {
