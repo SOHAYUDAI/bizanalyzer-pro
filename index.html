@@ -483,91 +483,110 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            class BizAnalyzer {
-                constructor() {
-                    this.form = document.getElementById('analysisForm');
-                    if (!this.form) {
-                        console.error('フォームが見つかりません'); 
-                        return;
-                    }
-                    this.button = document.getElementById('analyzeButton');
-                    this.buttonText = document.getElementById('buttonText');
-                    this.resultsSection = document.getElementById('resultsSection');
-                    this.resultsContainer = document.getElementById('analysisResults');
-                    this.errorMessage = document.getElementById('errorMessage');
-
-                    this.form.addEventListener('submit', (e) => {
-                        e.preventDefault();
-                        this.analyzeBusinessPlan();
-                    });
-                }
-
-                async analyzeBusinessPlan() {
-                    const data = Object.fromEntries(new FormData(this.form).entries());
-                    this.setLoading(true);
-                    this.hideError();
-
-                    try {
-                        const res = await fetch('/api/analyze', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(data)
-                        });
-                        const result = await res.json();
-                        if (!result.analysis) throw new Error('APIからのresponseにanalysisがありません');
-                        this.displayResults(result.analysis, data);
-                    } catch (err) {
-                        this.showError('分析中にエラーが発生しました: ' + err.message);
-                    } finally {
-                        this.setLoading(false);
-                    }
-                }
-
-                displayResults(analysis, data) {
-                    const sections = analysis.split(/(?=【[^】]+】)/).map(block => {
-                        const match = block.match(/【([^】]+)】([\s\S]*)/);
-                        return match ? { title: match[1], content: match[2].trim() } : null;
-                    }).filter(Boolean);
-
-                    let html = `
-                        <div class="result-card" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; text-align: center;">
-                            <h2 style="color: white; margin-bottom: 10px;">${data.appName} 分析レポート</h2>
-                            <p style="opacity: 0.9;">AI駆動による包括的ビジネス分析結果</p>
-                        </div>
-                    `;
-
-                    html += sections.map((s, i) => `
-                        <div class="result-card">
-                            <div class="result-title">${['🎯','💼','📢','💰','⚠️','🚀'][i] || '📊'} ${s.title}</div>
-                            <div class="result-content">${s.content.replace(/\n/g, '<br>')}</div>
-                        </div>`).join('');
-
-                    this.resultsContainer.innerHTML = html;
-                    this.resultsSection.classList.add('active');
-                    this.resultsSection.scrollIntoView({ behavior: 'smooth' });
-                }
-
-                setLoading(loading) {
-                    this.button.disabled = loading;
-                    this.buttonText.innerHTML = loading ? 
-                        '<div class="loading"><div class="spinner"></div>AI分析中...</div>' : 
-                        '🔍 AI分析を開始';
-                }
-
-                showError(msg) {
-                    this.errorMessage.textContent = msg;
-                    this.errorMessage.classList.add('active');
-                    this.errorMessage.scrollIntoView({ behavior: 'smooth' });
-                }
-
-                hideError() {
-                    this.errorMessage.classList.remove('active');
-                }
+       document.addEventListener('DOMContentLoaded', () => {
+    class BizAnalyzer {
+        constructor() {
+            this.form = document.getElementById('analysisForm');
+            if (!this.form) {
+                console.error('フォームが見つかりません'); 
+                return;
             }
+            this.button = document.getElementById('analyzeButton');
+            this.buttonText = document.getElementById('buttonText');
+            this.resultsSection = document.getElementById('resultsSection');
+            this.resultsContainer = document.getElementById('analysisResults');
+            this.errorMessage = document.getElementById('errorMessage');
 
-            new BizAnalyzer();
-        });
+            this.form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.analyzeBusinessPlan();
+            });
+        }
+
+        async analyzeBusinessPlan() {
+            const data = Object.fromEntries(new FormData(this.form).entries());
+            console.log('送信データ:', data);
+            
+            this.setLoading(true);
+            this.hideError();
+
+            try {
+                const res = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                console.log('レスポンスステータス:', res.status);
+                
+                if (!res.ok) {
+                    throw new Error(`HTTPエラー: ${res.status}`);
+                }
+                
+                const result = await res.json();
+                console.log('APIレスポンス:', result);
+                
+                if (result.error) {
+                    throw new Error(result.error + (result.debug ? ` (詳細: ${JSON.stringify(result.debug)})` : ''));
+                }
+                
+                if (!result.analysis) {
+                    throw new Error('APIからのresponseにanalysisがありません。レスポンス: ' + JSON.stringify(result));
+                }
+                
+                this.displayResults(result.analysis, data);
+            } catch (err) {
+                console.error('分析エラー:', err);
+                this.showError('分析中にエラーが発生しました: ' + err.message);
+            } finally {
+                this.setLoading(false);
+            }
+        }
+
+        displayResults(analysis, data) {
+            const sections = analysis.split(/(?=【[^】]+】)/).map(block => {
+                const match = block.match(/【([^】]+)】([\s\S]*)/);
+                return match ? { title: match[1], content: match[2].trim() } : null;
+            }).filter(Boolean);
+
+            let html = `
+                <div class="result-card" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; text-align: center;">
+                    <h2 style="color: white; margin-bottom: 10px;">${data.appName} 分析レポート</h2>
+                    <p style="opacity: 0.9;">AI駆動による包括的ビジネス分析結果</p>
+                </div>
+            `;
+
+            html += sections.map((s, i) => `
+                <div class="result-card">
+                    <div class="result-title">${['🎯','💼','📢','💰','⚠️','🚀'][i] || '📊'} ${s.title}</div>
+                    <div class="result-content">${s.content.replace(/\n/g, '<br>')}</div>
+                </div>`).join('');
+
+            this.resultsContainer.innerHTML = html;
+            this.resultsSection.classList.add('active');
+            this.resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        setLoading(loading) {
+            this.button.disabled = loading;
+            this.buttonText.innerHTML = loading ? 
+                '<div class="loading"><div class="spinner"></div>AI分析中...</div>' : 
+                '🔍 AI分析を開始';
+        }
+
+        showError(msg) {
+            this.errorMessage.textContent = msg;
+            this.errorMessage.classList.add('active');
+            this.errorMessage.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        hideError() {
+            this.errorMessage.classList.remove('active');
+        }
+    }
+
+    new BizAnalyzer();
+});
     </script>
 </body>
 </html>
